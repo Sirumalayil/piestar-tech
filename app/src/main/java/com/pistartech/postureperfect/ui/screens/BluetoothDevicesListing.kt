@@ -1,7 +1,11 @@
 package com.pistartech.postureperfect.ui.screens
 
-import android.annotation.SuppressLint
+import android.Manifest
 import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -29,13 +33,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.pistartech.postureperfect.R
@@ -126,8 +129,6 @@ fun BluetoothDevicesListing(
     }
 }
 
-
-@SuppressLint("MissingPermission")
 @Composable
 fun BluetoothDeviceItem(device: BluetoothDevice, navController: NavHostController?) {
     Card(
@@ -150,6 +151,13 @@ fun BluetoothDeviceItem(device: BluetoothDevice, navController: NavHostControlle
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Log.e("TAG","Device: $device")
+                if (ActivityCompat.checkSelfPermission(
+                        LocalContext.current,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    return@Card
+                }
                 Text(device.name ?: device.address, style = TextStyle(
                     color = PrimaryColor,
                     fontWeight = FontWeight.Normal,
@@ -157,7 +165,7 @@ fun BluetoothDeviceItem(device: BluetoothDevice, navController: NavHostControlle
                 ))
                 TextButton(
                     onClick = {
-                        navController?.navigate("")
+                        pairDevice(device, navController)
                     }
                 ) {
                     Text(
@@ -173,3 +181,36 @@ fun BluetoothDeviceItem(device: BluetoothDevice, navController: NavHostControlle
         }
     }
 }
+
+fun pairDevice(device: BluetoothDevice, navController: NavHostController?) {
+    try {
+        val method = device.javaClass.getMethod("createBond")
+        method.invoke(device)
+        navController?.navigate("")
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
+val pairingReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        when (intent?.action) {
+            BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+                val device =
+                    intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
+
+                when (bondState) {
+                    BluetoothDevice.BOND_BONDED -> {
+                        Log.d("Bluetooth", "Paired with ${device?.name}")
+                        // You can now connect to the device using socket, if needed
+                    }
+                    BluetoothDevice.BOND_NONE -> {
+                        Log.d("Bluetooth", "Pairing failed or unpaired")
+                    }
+                }
+            }
+        }
+    }
+}
+

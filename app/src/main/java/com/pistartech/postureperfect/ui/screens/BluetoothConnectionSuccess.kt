@@ -26,6 +26,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.pistartech.postureperfect.R
 import com.pistartech.postureperfect.utils.LocalGifImage
 
@@ -34,9 +36,16 @@ import com.pistartech.postureperfect.utils.LocalGifImage
  */
 
 @RequiresApi(Build.VERSION_CODES.P)
-@Preview(showSystemUi = true, showBackground = true)
 @Composable
-fun BluetoothConnectionSuccess() {
+@Preview
+fun Preview() {
+    val navController = rememberNavController()
+    BluetoothConnectionSuccess(navController)
+}
+
+@RequiresApi(Build.VERSION_CODES.P)
+@Composable
+fun BluetoothConnectionSuccess(navController: NavHostController) {
     Box(modifier = Modifier.fillMaxSize()
         .systemBarsPadding()) {
         Image(

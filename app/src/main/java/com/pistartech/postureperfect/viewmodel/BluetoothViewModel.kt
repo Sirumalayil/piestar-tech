@@ -44,7 +44,7 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
                     }
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-                    startDiscovery()
+                    //startDiscovery()
                 }
             }
         }

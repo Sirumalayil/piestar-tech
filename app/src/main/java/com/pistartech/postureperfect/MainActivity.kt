@@ -1,5 +1,7 @@
 package com.pistartech.postureperfect
 
+import android.bluetooth.BluetoothDevice
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,12 +13,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.pistartech.postureperfect.ui.screens.Analytics
+import com.pistartech.postureperfect.ui.screens.BluetoothConnectionSuccess
 import com.pistartech.postureperfect.ui.screens.BluetoothDevicesListing
 import com.pistartech.postureperfect.ui.screens.BluetoothToggle
 import com.pistartech.postureperfect.ui.screens.Faqs
 import com.pistartech.postureperfect.ui.screens.Home
 import com.pistartech.postureperfect.ui.screens.ProfileScreen
 import com.pistartech.postureperfect.ui.screens.SetUpProfile
+import com.pistartech.postureperfect.ui.screens.pairingReceiver
 import com.pistartech.postureperfect.ui.theme.ChairServiceTheme
 import com.pistartech.postureperfect.viewmodel.BluetoothViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -34,7 +38,14 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+        registerReceiver(pairingReceiver, filter)
+    }
 }
+
 
 @RequiresApi(Build.VERSION_CODES.P)
 @Composable
@@ -74,6 +85,9 @@ fun MainScreen() {
         }
         composable("home") {
             Home(navController = navController)
+        }
+        composable("bluetooth_connected") {
+            BluetoothConnectionSuccess(navController = navController)
         }
     }
 }

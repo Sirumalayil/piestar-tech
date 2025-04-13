@@ -35,7 +35,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -358,9 +357,7 @@ fun SwitchWithCustomColors(
                 val requiredPermissions = when {
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> arrayOf(
                         android.Manifest.permission.BLUETOOTH_CONNECT,
-                        android.Manifest.permission.BLUETOOTH_SCAN
-                    )
-                    Build.VERSION.SDK_INT == Build.VERSION_CODES.Q -> arrayOf(
+                        android.Manifest.permission.BLUETOOTH_SCAN,
                         android.Manifest.permission.ACCESS_FINE_LOCATION
                     )
                     else -> arrayOf(
