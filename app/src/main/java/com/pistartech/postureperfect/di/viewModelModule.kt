@@ -3,6 +3,7 @@ package com.pistartech.postureperfect.di
 
 import com.pistartech.postureperfect.viewmodel.BluetoothViewModel
 import com.pistartech.postureperfect.viewmodel.SplashViewModel
+import org.koin.android.ext.koin.androidApplication
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -11,6 +12,6 @@ import org.koin.dsl.module
  */
 
 val viewModelModule = module {
-    viewModel  {BluetoothViewModel()}
-    viewModel  {SplashViewModel()}
+    viewModel  {BluetoothViewModel(androidApplication())}
+    viewModel  {SplashViewModel(androidApplication())}
 }

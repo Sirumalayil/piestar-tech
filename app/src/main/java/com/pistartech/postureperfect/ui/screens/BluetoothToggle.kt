@@ -245,6 +245,7 @@ fun ShowBluetoothEnableRequestDialog(
                     modifier = Modifier.fillMaxWidth(),
                     text = "Enable Bluetooth",
                     fontSize = 18.sp,
+                    color = Color.Black,
                     textAlign = TextAlign.Center,
                     fontFamily = FontFamily(Font(R.font.poppins_bold))
                 )
@@ -252,6 +253,7 @@ fun ShowBluetoothEnableRequestDialog(
             text = {
                 Text(
                     fontSize = 14.sp,
+                    color = Color.Black,
                     textAlign = TextAlign.Center,
                     fontFamily = FontFamily(Font(R.font.poppins_regular)),
                     text = "This app requires Bluetooth to be enabled to function properly.")
@@ -315,6 +317,7 @@ fun rememberBluetoothPermissionHandler(
         val allGranted = permissions.all { it.value }
         if (allGranted) {
             bluetoothViewModel?.toggleBluetooth(true, context)
+            bluetoothViewModel?.startDiscovery()
         } else {
             bluetoothViewModel?.toggleBluetooth(false, context)
             if (permissionsDeniedPermanently(context, permissions.keys.toList())) {

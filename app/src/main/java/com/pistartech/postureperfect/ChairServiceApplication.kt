@@ -3,6 +3,7 @@ package com.pistartech.postureperfect
 import android.app.Application
 import com.pistartech.postureperfect.di.repositoryModule
 import com.pistartech.postureperfect.di.viewModelModule
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
 /**
@@ -15,6 +16,7 @@ class ChairServiceApplication: Application() {
         super.onCreate()
 
         startKoin {
+            androidContext(this@ChairServiceApplication)
             modules(listOf(
                 viewModelModule,
                 repositoryModule

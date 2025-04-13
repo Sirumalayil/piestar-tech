@@ -1,5 +1,7 @@
 package com.pistartech.postureperfect.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
@@ -11,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
  */
 
 
-open class BaseViewModel : ViewModel(){
+open class BaseViewModel(application: Application) : AndroidViewModel(application){
 
     inline fun <T> launchOnViewModelScope(crossinline block: suspend () -> LiveData<T>): LiveData<T> {
         return liveData(viewModelScope.coroutineContext + Dispatchers.IO) {

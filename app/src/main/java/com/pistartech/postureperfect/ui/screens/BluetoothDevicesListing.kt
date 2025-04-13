@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,7 +72,9 @@ fun BluetoothDevicesListing(
     navController: NavHostController?,
     bluetoothViewmodel: BluetoothViewModel?) {
 
-    val nearByDevices by bluetoothViewmodel?.nearByDevices?.collectAsState() ?: remember { mutableStateOf(emptyList()) }
+    val nearbyDevices = bluetoothViewmodel?.nearbyDevices?.collectAsState()?.value ?: emptyList()
+
+    LaunchedEffect(Unit) { bluetoothViewmodel?.startDiscovery() }
 
     Box(modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -109,9 +112,9 @@ fun BluetoothDevicesListing(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            if (nearByDevices.isNotEmpty()) {
+            if (nearbyDevices.isNotEmpty()) {
                 LazyColumn {
-                    items(nearByDevices) { device ->
+                    items(nearbyDevices) { device ->
                         BluetoothDeviceItem(device,navController)
                     }
                 }
@@ -154,7 +157,7 @@ fun BluetoothDeviceItem(device: BluetoothDevice, navController: NavHostControlle
                 ))
                 TextButton(
                     onClick = {
-                        navController?.navigate("profile")
+                        navController?.navigate("")
                     }
                 ) {
                     Text(
