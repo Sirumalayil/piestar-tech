@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.lulu.chairservice"
+    namespace = "com.pistartech.postureperfect"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.lulu.chairservice"
+        applicationId = "com.pistartech.postureperfect"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

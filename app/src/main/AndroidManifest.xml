@@ -15,7 +15,7 @@
         android:required="true" />
 
     <application
-        android:name="com.test.chairservice.ChairServiceApplication"
+        android:name="com.pistartech.postureperfect.ChairServiceApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -26,7 +26,7 @@
         android:theme="@style/Theme.ChairService"
         tools:targetApi="31">
         <activity
-            android:name="com.test.chairservice.Splashscreen"
+            android:name="com.pistartech.postureperfect.Splashscreen"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.App.Starting">
@@ -37,7 +37,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.test.chairservice.MainActivity"
+            android:name="com.pistartech.postureperfect.MainActivity"
             android:theme="@style/Theme.ChairService"/>
     </application>
 
