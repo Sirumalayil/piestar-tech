@@ -25,7 +25,8 @@ import kotlinx.coroutines.withContext
 
 @RequiresApi(Build.VERSION_CODES.P)
 @Composable
-fun LocalGifImage(modifier: Modifier = Modifier.size(200.dp), drawable: Int) {
+fun LocalGifImage(modifier: Modifier = Modifier, drawable: Int,
+                  loop: Boolean = true) {
     val context = LocalContext.current
     var gifDrawable by remember { mutableStateOf<AnimatedImageDrawable?>(null) }
 
@@ -33,19 +34,22 @@ fun LocalGifImage(modifier: Modifier = Modifier.size(200.dp), drawable: Int) {
         withContext(Dispatchers.IO) {
             try {
                 val source = ImageDecoder.createSource(context.resources, drawable)
-                val drawable = ImageDecoder.decodeDrawable(source) as? AnimatedImageDrawable
-                drawable?.start()
-                gifDrawable = drawable
+                val animatedDrawable = ImageDecoder.decodeDrawable(source) as? AnimatedImageDrawable
+                animatedDrawable?.apply {
+                    if (!loop) repeatCount = 1
+                    start()
+                    gifDrawable = this
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    gifDrawable?.let { drawable ->
+    gifDrawable?.let { gif ->
         AndroidView(
-            modifier = modifier,
+            modifier = modifier.size(200.dp),
             factory = { ImageView(context).apply {
-                setImageDrawable(drawable) } })
+                setImageDrawable(gif) } })
     }
 }

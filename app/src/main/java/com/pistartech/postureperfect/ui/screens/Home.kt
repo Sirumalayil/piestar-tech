@@ -2,6 +2,7 @@ package com.pistartech.postureperfect.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -101,7 +102,7 @@ fun Home(navController: NavHostController?) {
                 },
                 actions = {
                     IconButton(onClick = {
-
+                        navController?.navigate("profile")
                     }) {
                         Icon(
                             painter = painterResource(R.drawable.ic_user),
@@ -163,9 +164,12 @@ fun Home(navController: NavHostController?) {
                 ){
                     Row(
                         Modifier
+                            .clickable {
+                                navController?.navigate("analytics")
+                            }
                             .fillMaxWidth()
                             .padding(start = 16.dp, end = 16.dp, top = 24.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
                             "TODAY", fontSize = 20.sp,
@@ -184,7 +188,7 @@ fun Home(navController: NavHostController?) {
                                 text = "View Analytics",
                                 color = Color(0xFF4B4DED),
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
                             )
                         }
                     }

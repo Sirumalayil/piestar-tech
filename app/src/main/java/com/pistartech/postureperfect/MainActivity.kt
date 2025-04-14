@@ -20,7 +20,6 @@ import com.pistartech.postureperfect.ui.screens.Faqs
 import com.pistartech.postureperfect.ui.screens.Home
 import com.pistartech.postureperfect.ui.screens.ProfileScreen
 import com.pistartech.postureperfect.ui.screens.SetUpProfile
-import com.pistartech.postureperfect.ui.screens.pairingReceiver
 import com.pistartech.postureperfect.ui.theme.ChairServiceTheme
 import com.pistartech.postureperfect.viewmodel.BluetoothViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -37,12 +36,6 @@ class MainActivity : ComponentActivity() {
                 MainScreen()
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-        registerReceiver(pairingReceiver, filter)
     }
 }
 
