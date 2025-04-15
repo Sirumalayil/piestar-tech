@@ -58,29 +58,32 @@ fun MainScreen() {
         }
         composable("profile") {
             ProfileScreen(onBackClick = {
-
+                navController.popBackStack()
             },navController)
         }
         composable("faqs") {
             Faqs(onBackClick = {
-
+                navController.popBackStack()
             },navController)
         }
         composable("setup_profile") {
             SetUpProfile(onBackClick = {
-
+                navController.popBackStack()
             },navController)
         }
         composable("analytics") {
             Analytics(onBackClick = {
-
+                navController.popBackStack()
             },navController)
         }
         composable("home") {
             Home(navController = navController)
         }
         composable("bluetooth_connected") {
-            BluetoothConnectionSuccess(navController = navController)
+            BluetoothConnectionSuccess(navController = navController,
+                onBackClick = {
+                    navController.popBackStack()
+                })
         }
     }
 }

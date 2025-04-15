@@ -137,7 +137,7 @@ fun ProfileItem(iconRes: Int, title: String, onClick: () -> Unit,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(painter = painterResource(id = iconRes),
