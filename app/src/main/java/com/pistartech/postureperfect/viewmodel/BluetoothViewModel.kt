@@ -4,27 +4,36 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.pistartech.postureperfect.utils.BluetoothConnectionCallback
 import com.pistartech.postureperfect.utils.PairingStatus
 import com.pistartech.postureperfect.utils.Utils.MY_UUID
 import com.pistartech.postureperfect.utils.hasPermissions
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.io.IOException
-import java.util.UUID
 
 /**
  * Created by Siru malayil on 28-02-2025.
  */
 class BluetoothViewModel(application: Application): BaseViewModel(application) {
     private val context = getApplication<Application>().applicationContext
-    private val bluetoothAdapter: BluetoothAdapter? =
-        (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+//    private val bluetoothAdapter: BluetoothAdapter? =
+//        (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+
+    private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
+    private var bluetoothSocket: BluetoothSocket? = null
+    private var connectionCallback: BluetoothConnectionCallback? = null
 
     private val _nearbyDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
     val nearbyDevices: StateFlow<List<BluetoothDevice>> = _nearbyDevices
@@ -36,6 +45,15 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
 
     private val _pairingState = MutableStateFlow<PairingStatus>(PairingStatus.Idle)
     val pairingState: StateFlow<PairingStatus> = _pairingState
+
+    // State to track connection status
+    private val _connectionState = MutableLiveData<Boolean>()
+    val connectionState: LiveData<Boolean> get() = _connectionState
+
+
+    fun setCallback(callback: BluetoothConnectionCallback) {
+        connectionCallback = callback
+    }
 
     fun updatePairingState(status: PairingStatus) {
         _pairingState.value = status
@@ -73,6 +91,9 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
 
     @SuppressLint("MissingPermission")
     fun startDiscovery() {
+        if (bluetoothAdapter?.isDiscovering == true) {
+            bluetoothAdapter.cancelDiscovery()
+        }
         foundDevices.clear()
         _nearbyDevices.value = emptyList()
 
@@ -122,38 +143,6 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
         }
     }
 
-    fun connectToDevice(device: BluetoothDevice, context: Context) {
-//        if (!hasPermissions(context = context)) return
-//        if (device.bondState == BluetoothDevice.BOND_NONE) {
-//            device.createBond()
-//        } else if (device.bondState == BluetoothDevice.BOND_BONDED) {
-//            initiateConnection(device)
-//        }
-
-        Thread {
-            try {
-                val socket = device.createRfcommSocketToServiceRecord(MY_UUID)
-                BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
-                socket.connect()
-                Log.d("BluetoothClient", "Connected to server!")
-
-                val inputStream = socket.inputStream
-                val outputStream = socket.outputStream
-
-                // Example: Send message to server
-                outputStream.write("Hello from Client".toByteArray())
-
-                // Read response
-                val buffer = ByteArray(1024)
-                val bytes = inputStream.read(buffer)
-                val response = String(buffer, 0, bytes)
-                Log.d("BluetoothClient", "Received: $response")
-            } catch (e: IOException) {
-                Log.e("BluetoothClient", "Connection error: ${e.message}", e)
-            }
-        }.start()
-    }
-
     fun initiateConnection(device: BluetoothDevice) {
         val uuid = MY_UUID
         try {
@@ -164,6 +153,60 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
         } catch (e: IOException) {
             Log.e("Bluetooth", "Socket connect failed", e)
         }
+    }
+
+    fun connectToDevice(device: BluetoothDevice) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+//                val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") // SPP UUID
+                bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID)
+                bluetoothAdapter?.cancelDiscovery()
+                bluetoothSocket?.connect()
+
+                _connectionState.postValue(true)
+                connectionCallback?.onConnected()
+                readData(bluetoothSocket)
+
+                val output = bluetoothSocket?.outputStream
+                output?.write("Hello Arduino".toByteArray())
+
+            } catch (e: IOException) {
+                e.printStackTrace()
+                _connectionState.postValue(false)
+                connectionCallback?.onError(e)
+            }
+        }
+    }
+
+    private fun readData(bluetoothSocket: BluetoothSocket?) {
+        try {
+            val input = bluetoothSocket?.inputStream
+            val buffer = ByteArray(1024)
+
+            while (true) {
+                val bytes = input?.read(buffer)
+                if (bytes != null) {
+                    if (bytes > 0) {
+                        val data = String(buffer, 0, bytes)
+                        connectionCallback?.onDataReceived(data)
+                    } else {
+                        break
+                    }
+                }
+            }
+        } catch (e: IOException) {
+            connectionCallback?.onDisconnected()
+        }
+    }
+
+    fun sendData(message: String) {
+        bluetoothSocket?.outputStream?.write(message.toByteArray())
+    }
+
+    fun disconnect() {
+        bluetoothSocket?.close()
+        _connectionState.postValue(false)
+        connectionCallback?.onDisconnected()
     }
 }
 

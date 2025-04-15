@@ -94,7 +94,7 @@ fun Home(navController: NavHostController?) {
                 title = {},
                 navigationIcon = {
                     Icon(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.size(50.dp),
                         painter = painterResource(R.drawable.ic_pistar),
                         contentDescription = "App Logo",
                         tint = Color.Unspecified
@@ -164,19 +164,21 @@ fun Home(navController: NavHostController?) {
                 ){
                     Row(
                         Modifier
-                            .clickable {
-                                navController?.navigate("analytics")
-                            }
                             .fillMaxWidth()
                             .padding(start = 16.dp, end = 16.dp, top = 24.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            "TODAY", fontSize = 20.sp,
+                            text = "TODAY", fontSize = 20.sp,
                             fontWeight = FontWeight(700),
                             fontFamily = FontFamily(Font(R.font.poppins_bold))
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            modifier= Modifier
+                                .clickable {
+                                    navController?.navigate("analytics")
+                                })
+                        {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_pie_chart), // Replace with your icon
                                 contentDescription = "Analytics",

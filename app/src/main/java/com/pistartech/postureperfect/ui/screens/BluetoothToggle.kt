@@ -394,9 +394,7 @@ fun ShowPermissionSettingsDialog(context: Context) {
     var openDialog by remember { mutableStateOf(true) }
     if (openDialog) {
         AlertDialog(
-            onDismissRequest = {
-                openDialog = false
-            },
+            onDismissRequest = {},
             title = {
                 Text(
                     modifier = Modifier.fillMaxWidth(),

@@ -1,5 +1,12 @@
 package com.pistartech.postureperfect.ui.screens
 
+import android.Manifest
+import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -33,6 +41,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.pistartech.postureperfect.R
@@ -76,46 +87,51 @@ fun ProfileScreen(onBackClick: () -> Unit = {}, navController: NavHostController
             ProfileItem(
                 iconRes = R.drawable.ic_profile,
                 title = "Setup your profile",
-                onClick = {})
+                onClick = {
+                    navController?.navigate("setup_profile")
+                })
             HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
 
             ProfileItem(
                 iconRes = R.drawable.ic_preferences,
                 title = "Setup your preferences",
-                onClick = {})
+                onClick = {
+                    //navController?.navigate("")
+                })
             HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
 
             ProfileItem(
                 iconRes = R.drawable.ic_notifications,
                 title = "Notifications",
                 showSwitch = true,
-                onClick = {})
+                onClick = {
+                    //Enable Notification
+                })
             HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
 
             ProfileItem(
                 iconRes = R.drawable.ic_bluetooth,
                 title = "Bluetooth setup again",
-                onClick = {})
+                onClick = {
+                    //navController?.navigate("")
+                })
             HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
 
             ProfileItem(
                 iconRes = R.drawable.ic_faqs,
                 title = "FAQS",
-                onClick = {})
+                onClick = {
+                    navController?.navigate("faqs")
+                })
         }
     }
 }
 
 @Composable
-fun CustomSwitch() {
-
-}
-
-
-@Composable
 fun ProfileItem(iconRes: Int, title: String, onClick: () -> Unit,
                 showSwitch: Boolean = false) {
-    var isEnabled by remember { mutableStateOf(true) }
+    var isEnabled by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Row(
         modifier = Modifier
@@ -137,11 +153,59 @@ fun ProfileItem(iconRes: Int, title: String, onClick: () -> Unit,
         if (showSwitch) {
             Switch(
                 checked = isEnabled,
-                onCheckedChange = { isEnabled = it }
+                onCheckedChange = {
+                    isEnabled = it
+                    if (it) {
+                        showNotification(context)
+                    } else {
+                        cancelNotification(context)
+                    }
+                }
             )
         } else
             Icon(painter = painterResource(id = R.drawable.ic_right_arrow), contentDescription = "Forward", tint = Color.Black)
     }
+}
+
+fun cancelNotification(context: Context) {
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    notificationManager.cancel(1) // Cancel the notification by ID
+}
+
+fun showNotification(context: Context) {
+    val channelId = "switch_channel"
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                context as Activity,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                1001
+            )
+        }
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+            channelId,
+            "Switch Notification",
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    val builder = NotificationCompat.Builder(context, channelId)
+        .setSmallIcon(R.mipmap.ic_posture_perfect_launcher) // replace with your icon
+        .setContentTitle("Switch Enabled")
+        .setContentText("Notifications are now active.")
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+    notificationManager.notify(1, builder.build())
 }
 
 @Preview
@@ -153,3 +217,4 @@ fun PreviewProfile() {
         navController = navController
     )
 }
+

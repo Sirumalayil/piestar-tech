@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -83,6 +81,8 @@ fun BluetoothConnectionSuccess(navController: NavHostController) {
                 )
             )
 
+            Spacer(Modifier.height(20.dp))
+
             OutlinedButton(
                 modifier = Modifier
                     .width(150.dp)
@@ -105,6 +105,8 @@ fun BluetoothConnectionSuccess(navController: NavHostController) {
                     )
                 )
             }
+
+            Spacer(Modifier.height(30.dp))
         }
     }
 }

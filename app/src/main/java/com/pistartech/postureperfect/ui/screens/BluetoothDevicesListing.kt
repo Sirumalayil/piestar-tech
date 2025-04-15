@@ -11,11 +11,14 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +29,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,6 +42,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,8 +63,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.pistartech.postureperfect.R
 import com.pistartech.postureperfect.ui.theme.PrimaryColor
+import com.pistartech.postureperfect.utils.BluetoothConnectionCallback
 import com.pistartech.postureperfect.utils.LocalGifImage
-import com.pistartech.postureperfect.utils.PairingStatus
 import com.pistartech.postureperfect.utils.Utils.MY_UUID
 import com.pistartech.postureperfect.utils.hasPermissions
 import com.pistartech.postureperfect.viewmodel.BluetoothViewModel
@@ -88,10 +94,36 @@ fun BluetoothDevicesListing(
     Log.e("Permission", "hasPermission: ${hasPermissions(context)}")
     if (!hasPermissions(context)) return
 
+    val connectionState = bluetoothViewmodel?.connectionState?.observeAsState(false)
+//    val device: BluetoothDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice("XX:XX:XX:XX:XX:XX")
+
+    var receivedData = remember { mutableStateOf("") }
     val snackBarHostState = remember { SnackbarHostState() }
     val pairingStatus = bluetoothViewmodel?.pairingState?.collectAsState()?.value
     val nearbyDevices = bluetoothViewmodel?.nearbyDevices?.collectAsState()?.value ?: emptyList()
+//    val nearbyDevices = bluetoothViewmodel?.bleDevices?.collectAsState()?.value ?: emptyList()
     LaunchedEffect(Unit) { bluetoothViewmodel?.startDiscovery() }
+
+    LaunchedEffect(Unit) {
+        bluetoothViewmodel?.setCallback(object : BluetoothConnectionCallback {
+            override fun onConnected() {
+                Log.d("Bluetooth", "Connected to device")
+            }
+
+            override fun onDisconnected() {
+                Log.d("Bluetooth", "Disconnected")
+            }
+
+            override fun onDataReceived(data: String) {
+                //receivedData = data
+                Log.e("Bluetooth", "data: $data")
+            }
+
+            override fun onError(e: Exception) {
+                Log.e("Bluetooth", "Error: ${e.message}")
+            }
+        })
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) }
@@ -100,25 +132,25 @@ fun BluetoothDevicesListing(
             .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
-            LaunchedEffect(pairingStatus) {
-                pairingStatus?.let {
-                    when (it) {
-                        is PairingStatus.InProgress -> {
-                            snackBarHostState.showSnackbar("Pairing in progress...")
-                        }
-                        is PairingStatus.Success -> {
-                            snackBarHostState.showSnackbar("Paired with ${it.device.name ?: it.device.address}")
-                            navController?.navigate("bluetooth_connected")
-                        }
-                        is PairingStatus.Failed -> {
-                            snackBarHostState.showSnackbar("Pairing failed")
-                        }
-                        PairingStatus.Idle -> {
-                            snackBarHostState.showSnackbar("Searching nearest devices...")
-                        }
-                    }
-                }
-            }
+//            LaunchedEffect(pairingStatus) {
+//                pairingStatus?.let {
+//                    when (it) {
+//                        is PairingStatus.InProgress -> {
+//                            snackBarHostState.showSnackbar("Pairing in progress...")
+//                        }
+//                        is PairingStatus.Success -> {
+//                            snackBarHostState.showSnackbar("Paired with ${it.device.name ?: it.device.address}")
+//                            navController?.navigate("bluetooth_connected")
+//                        }
+//                        is PairingStatus.Failed -> {
+//                            snackBarHostState.showSnackbar("Pairing failed")
+//                        }
+//                        PairingStatus.Idle -> {
+//                            snackBarHostState.showSnackbar("Searching nearest devices...")
+//                        }
+//                    }
+//                }
+//            }
 
             Image(
                 painter = painterResource(R.drawable.ic_main_bg),
@@ -156,7 +188,8 @@ fun BluetoothDevicesListing(
                 if (nearbyDevices.isNotEmpty()) {
                     LazyColumn {
                         items(nearbyDevices) { device ->
-                            BluetoothDeviceItem(device,bluetoothViewmodel,navController)
+                            BluetoothDeviceItem(
+                                device,bluetoothViewmodel,navController)
                         }
                     }
                 } else {
@@ -166,40 +199,40 @@ fun BluetoothDevicesListing(
             }
         }
     }
-    startBluetoothServer(BluetoothAdapter.getDefaultAdapter())
-    DisposableEffect(Unit) {
-        val pairingReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                when (intent?.action) {
-                    BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
-                        val device =
-                            intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                        val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
-
-                        when (bondState) {
-                            BluetoothDevice.BOND_BONDING -> {
-                                bluetoothViewmodel?.updatePairingState(PairingStatus.InProgress)
-                            }
-                            BluetoothDevice.BOND_BONDED -> {
-                                bluetoothViewmodel?.updatePairingState(PairingStatus.Success(device!!))
-                            }
-                            BluetoothDevice.BOND_NONE -> {
-                                bluetoothViewmodel?.updatePairingState(PairingStatus.Failed)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-        context.registerReceiver(pairingReceiver, filter)
-
-        // Properly return DisposableEffectResult
-        onDispose {
-            context.unregisterReceiver(pairingReceiver)
-        }
-    }
+//    startBluetoothServer(BluetoothAdapter.getDefaultAdapter())
+//    DisposableEffect(Unit) {
+//        val pairingReceiver = object : BroadcastReceiver() {
+//            override fun onReceive(context: Context?, intent: Intent?) {
+//                when (intent?.action) {
+//                    BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+//                        val device =
+//                            intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+//                        val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
+//
+//                        when (bondState) {
+//                            BluetoothDevice.BOND_BONDING -> {
+//                                bluetoothViewmodel?.updatePairingState(PairingStatus.InProgress)
+//                            }
+//                            BluetoothDevice.BOND_BONDED -> {
+//                                bluetoothViewmodel?.updatePairingState(PairingStatus.Success(device!!))
+//                            }
+//                            BluetoothDevice.BOND_NONE -> {
+//                                bluetoothViewmodel?.updatePairingState(PairingStatus.Failed)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+//        context.registerReceiver(pairingReceiver, filter)
+//
+//        // Properly return DisposableEffectResult
+//        onDispose {
+//            context.unregisterReceiver(pairingReceiver)
+//        }
+//    }
 }
 
 @SuppressLint("MissingPermission")
@@ -209,6 +242,7 @@ fun BluetoothDeviceItem(
     bluetoothViewmodel: BluetoothViewModel?,
     navController: NavHostController?
 ) {
+    val showDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     Card(
@@ -224,28 +258,29 @@ fun BluetoothDeviceItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically)
             {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_chair),
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-
-                if (!hasPermissions(context = context))
-                    return@Card
-
-                Log.e("TAG","Device: ${device.name}  ${device.address}")
-
-                Text(device.name ?: device.address, style = TextStyle(
-                    color = PrimaryColor,
-                    textAlign = TextAlign.Start,
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = FontFamily(Font(R.font.poppins_regular))
-                ))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_chair),
+                        contentDescription = null,
+                        tint = Color.Black,
+                        modifier = Modifier.size(36.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        device.name ?: device.address,
+                        style = TextStyle(
+                            color = PrimaryColor,
+                            textAlign = TextAlign.Start,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = FontFamily(Font(R.font.poppins_medium))
+                        )
+                    )
+                }
                 TextButton(
                     onClick = {
-                        bluetoothViewmodel?.connectToDevice(device,context)
-                        //navController?.navigate("bluetooth_connected")
+                        showDialog.value = true
                     }
                 ) {
                     Text(
@@ -261,6 +296,98 @@ fun BluetoothDeviceItem(
         }
     }
     BluetoothBondingHandler(bluetoothViewmodel)
+
+    if (showDialog.value) {
+        ShowPairingConsentAlert(
+            onPair = {
+//                bluetoothViewmodel?.connectToDevice(device)
+                navController?.navigate("bluetooth_connected")
+            },
+            onCancel = {
+                showDialog.value = false
+            },
+            onDismiss = {
+                showDialog.value = false
+            }
+        )
+    }
+}
+
+@Composable
+fun ShowPairingConsentAlert(
+    onPair: () -> Unit,
+    onCancel: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { },
+        title = {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Pair Device",
+                fontSize = 18.sp,
+                textAlign = TextAlign.Center,
+                fontFamily = FontFamily(Font(R.font.poppins_bold))
+            )
+        },
+        text = {
+            Text(
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+                fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                text = "Are you sure you wan to pair this device?")
+        },
+        confirmButton = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+//                    .border(
+//                        width = 1.dp,
+//                        color = PrimaryColor,
+//                        shape = RoundedCornerShape(4.dp)
+//                    )
+//                    .clip(RoundedCornerShape(4.dp)),
+//                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable {
+                            onPair()
+                            onDismiss()
+                        }
+                        .background(Color.White)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Pair", color = PrimaryColor)
+                }
+//                Box(
+//                    modifier = Modifier
+//                        .width(1.dp)
+//                        .fillMaxHeight()
+//                        .background(PrimaryColor)
+//                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable {
+                            onCancel()
+                        }
+                        .background(Color.White)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Cancel", color = PrimaryColor)
+                }
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color.White,
+        tonalElevation = 8.dp
+    )
 }
 
 @Composable
