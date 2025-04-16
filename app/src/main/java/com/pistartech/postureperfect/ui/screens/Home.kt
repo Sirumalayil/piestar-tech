@@ -1,5 +1,8 @@
 package com.pistartech.postureperfect.ui.screens
 
+import android.content.Context
+import android.content.res.AssetFileDescriptor
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,6 +42,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -54,6 +60,13 @@ import androidx.navigation.compose.rememberNavController
 import com.pistartech.postureperfect.R
 import com.pistartech.postureperfect.model.AnalyticsData
 import com.pistartech.postureperfect.model.PieChartSegment
+import com.pistartech.postureperfect.viewmodel.BluetoothViewModel
+import org.tensorflow.lite.DataType
+import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.io.FileInputStream
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -65,13 +78,13 @@ import kotlin.math.sin
 @Composable
 fun PreviewHomeScreen() {
     val navController = rememberNavController()
-    Home(navController)
+    val bluetoothViewmodel = null
+    Home(navController, bluetoothViewmodel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Home(navController: NavHostController?) {
-
+fun Home(navController: NavHostController?, bluetoothViewmodel: BluetoothViewModel?) {
     val user = "Siraj"
 
     val cardData = listOf(
@@ -312,7 +325,15 @@ fun Home(navController: NavHostController?) {
                     ){
                         Column(modifier = Modifier.fillMaxWidth()
                             .padding(start = 8.dp, bottom = 8.dp)) {
-                            HeatmapWithAxes()
+                            val receivedData = bluetoothViewmodel?.receivedFloatData?.value
+                            LaunchedEffect(receivedData) {
+                                Log.d("Bluetooth", "Data on second screen: $receivedData")
+                            }
+                            val isSafe = runModel(
+                                context = LocalContext.current,
+                                inputData = receivedData)
+                            Log.d("Tflite model", "runModel: $isSafe")
+                            HeatmapWithAxes(receivedData!!)
                         }
                     }
                 }
@@ -353,10 +374,14 @@ fun SimpleHeatmap(data: List<List<Float>>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun HeatmapWithAxes() {
+fun HeatmapWithAxes(heatmapData: List<Float>) {
     val rows = 30
     val cols = 30
-    val data = remember { generateHeatmapData(rows, cols) }
+//    val data = remember { generateHeatmapData(rows, cols) }
+
+    val paddedData = remember(heatmapData) {
+        heatmapData.chunked(cols)
+    }
 
     Row(modifier = Modifier.background(Color.White)) {
         // Y-axis labels
@@ -382,7 +407,7 @@ fun HeatmapWithAxes() {
 
         Column {
             // Heatmap Canvas
-            SimpleHeatmap(data = data, modifier = Modifier
+            SimpleHeatmap(data = paddedData, modifier = Modifier
                 .height(210.dp)
                 .fillMaxWidth())
 
@@ -418,7 +443,6 @@ fun getColorForValue(value: Float): Color {
         else -> Color(0xFFFF0000) // Red
     }
 }
-
 
 @Composable
 fun SittingPieChart(
@@ -560,3 +584,32 @@ fun SittingPieChart(
 }
 
 
+fun loadModelFile(context: Context, fileName: String): MappedByteBuffer {
+    val fileDescriptor: AssetFileDescriptor = context.assets.openFd(fileName)
+    val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
+    val fileChannel = inputStream.channel
+    val startOffset = fileDescriptor.startOffset
+    val declaredLength = fileDescriptor.declaredLength
+    return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+}
+
+fun runModel(context: Context, inputData: List<Float>?): Boolean {
+    val model = Interpreter(loadModelFile(context, "model.tflite"))
+
+    // Convert List<Float> to FloatArray
+    val inputArray = inputData?.toFloatArray()
+
+    // Prepare input buffer
+    val inputBuffer = TensorBuffer.createFixedSize(intArrayOf(1, inputArray?.size ?: 0), DataType.FLOAT32)
+    inputBuffer.loadArray(inputArray)
+
+    // Prepare output buffer (adjust shape to your model's output)
+    val outputBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 1), DataType.FLOAT32)
+
+    model.run(inputBuffer.buffer, outputBuffer.buffer.rewind())
+
+    val output = outputBuffer.floatArray[0]
+
+    // Return true or false based on some logic — for example:
+    return output > 0.5f
+}

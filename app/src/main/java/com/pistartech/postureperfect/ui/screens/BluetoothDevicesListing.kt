@@ -68,6 +68,9 @@ import com.pistartech.postureperfect.utils.LocalGifImage
 import com.pistartech.postureperfect.utils.Utils.MY_UUID
 import com.pistartech.postureperfect.utils.hasPermissions
 import com.pistartech.postureperfect.viewmodel.BluetoothViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.IOException
 
 /**
@@ -97,7 +100,6 @@ fun BluetoothDevicesListing(
     val connectionState = bluetoothViewmodel?.connectionState?.observeAsState(false)
 //    val device: BluetoothDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice("XX:XX:XX:XX:XX:XX")
 
-    var receivedData = remember { mutableStateOf("") }
     val snackBarHostState = remember { SnackbarHostState() }
     val pairingStatus = bluetoothViewmodel?.pairingState?.collectAsState()?.value
     val nearbyDevices = bluetoothViewmodel?.nearbyDevices?.collectAsState()?.value ?: emptyList()
@@ -108,6 +110,9 @@ fun BluetoothDevicesListing(
         bluetoothViewmodel?.setCallback(object : BluetoothConnectionCallback {
             override fun onConnected() {
                 Log.d("Bluetooth", "Connected to device")
+                CoroutineScope(Dispatchers.Main).launch {
+                    navController?.navigate("bluetooth_connected")
+                }
             }
 
             override fun onDisconnected() {
@@ -115,8 +120,8 @@ fun BluetoothDevicesListing(
             }
 
             override fun onDataReceived(data: String) {
-                //receivedData = data
-                Log.e("Bluetooth", "data: $data")
+                bluetoothViewmodel.updateHeatMapData(data)
+                //Log.e("Bluetooth", "data: $data")
             }
 
             override fun onError(e: Exception) {
@@ -300,8 +305,8 @@ fun BluetoothDeviceItem(
     if (showDialog.value) {
         ShowPairingConsentAlert(
             onPair = {
-//                bluetoothViewmodel?.connectToDevice(device)
-                navController?.navigate("bluetooth_connected")
+                bluetoothViewmodel?.connectToDevice(device)
+//                navController?.navigate("bluetooth_connected")
             },
             onCancel = {
                 showDialog.value = false

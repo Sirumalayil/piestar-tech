@@ -10,6 +10,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -49,6 +51,26 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
     // State to track connection status
     private val _connectionState = MutableLiveData<Boolean>()
     val connectionState: LiveData<Boolean> get() = _connectionState
+
+    private val totalCells = 30 * 30
+    private val _receivedFloatData = mutableStateOf<List<Float>>(List(totalCells) { 0f })
+    val receivedFloatData: State<List<Float>> = _receivedFloatData
+
+
+    fun updateHeatMapData(rawData: String) {
+        val rawValues = rawData.split(",").mapNotNull { it.toFloatOrNull() }
+
+        if (rawValues.isNotEmpty()) {
+            val minVal = rawValues.minOrNull() ?: 0f
+            val maxVal = rawValues.maxOrNull() ?: 1f
+            val range = (maxVal - minVal).takeIf { it != 0f } ?: 1f
+
+            val normalized = rawValues.map { ((it - minVal) / range).coerceIn(0f, 1f) }
+
+            _receivedFloatData.value = (_receivedFloatData.value + normalized)
+                .takeLast(totalCells) // Keep only the latest 900 values
+        }
+    }
 
 
     fun setCallback(callback: BluetoothConnectionCallback) {
@@ -158,7 +180,6 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
     fun connectToDevice(device: BluetoothDevice) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-//                val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") // SPP UUID
                 bluetoothSocket = device.createRfcommSocketToServiceRecord(MY_UUID)
                 bluetoothAdapter?.cancelDiscovery()
                 bluetoothSocket?.connect()
@@ -199,9 +220,6 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
         }
     }
 
-    fun sendData(message: String) {
-        bluetoothSocket?.outputStream?.write(message.toByteArray())
-    }
 
     fun disconnect() {
         bluetoothSocket?.close()

@@ -39,6 +39,9 @@ android {
     buildFeatures {
         compose = true
     }
+    aaptOptions {
+        noCompress += "tflite"
+    }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
@@ -98,5 +101,8 @@ dependencies {
     implementation(libs.shimmer)
 
     implementation(libs.coil.compose)
+
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")  // Use the latest version
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
 
 }

@@ -1,7 +1,5 @@
 package com.pistartech.postureperfect
 
-import android.bluetooth.BluetoothDevice
-import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -77,7 +75,7 @@ fun MainScreen() {
             },navController)
         }
         composable("home") {
-            Home(navController = navController)
+            Home(navController = navController, bluetoothViewmodel)
         }
         composable("bluetooth_connected") {
             BluetoothConnectionSuccess(navController = navController,
