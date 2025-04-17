@@ -7,7 +7,7 @@ import android.bluetooth.BluetoothDevice
  */
 sealed class PairingStatus {
     object Idle : PairingStatus()
-    object InProgress : PairingStatus()
+    data class InProgress (val device: BluetoothDevice): PairingStatus()
     data class Success(val device: BluetoothDevice) : PairingStatus()
     object Failed : PairingStatus()
 }

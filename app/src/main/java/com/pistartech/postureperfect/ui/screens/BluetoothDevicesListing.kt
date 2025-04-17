@@ -65,6 +65,7 @@ import com.pistartech.postureperfect.R
 import com.pistartech.postureperfect.ui.theme.PrimaryColor
 import com.pistartech.postureperfect.utils.BluetoothConnectionCallback
 import com.pistartech.postureperfect.utils.LocalGifImage
+import com.pistartech.postureperfect.utils.PairingStatus
 import com.pistartech.postureperfect.utils.Utils.MY_UUID
 import com.pistartech.postureperfect.utils.hasPermissions
 import com.pistartech.postureperfect.viewmodel.BluetoothViewModel
@@ -121,7 +122,6 @@ fun BluetoothDevicesListing(
 
             override fun onDataReceived(data: String) {
                 bluetoothViewmodel.updateHeatMapData(data)
-
                 //Log.e("Bluetooth", "data: $data")
             }
 
@@ -138,25 +138,25 @@ fun BluetoothDevicesListing(
             .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
-//            LaunchedEffect(pairingStatus) {
-//                pairingStatus?.let {
-//                    when (it) {
-//                        is PairingStatus.InProgress -> {
-//                            snackBarHostState.showSnackbar("Pairing in progress...")
-//                        }
-//                        is PairingStatus.Success -> {
-//                            snackBarHostState.showSnackbar("Paired with ${it.device.name ?: it.device.address}")
-//                            navController?.navigate("bluetooth_connected")
-//                        }
-//                        is PairingStatus.Failed -> {
-//                            snackBarHostState.showSnackbar("Pairing failed")
-//                        }
-//                        PairingStatus.Idle -> {
-//                            snackBarHostState.showSnackbar("Searching nearest devices...")
-//                        }
-//                    }
-//                }
-//            }
+            LaunchedEffect(pairingStatus) {
+                pairingStatus?.let {
+                    when (it) {
+                        is PairingStatus.InProgress -> {
+                            snackBarHostState.showSnackbar("Pairing with ${it.device.name ?: it.device.address}")
+                        }
+                        is PairingStatus.Success -> {
+                            //snackBarHostState.showSnackbar("Paired with ${it.device.name ?: it.device.address}")
+                            //navController?.navigate("bluetooth_connected")
+                        }
+                        is PairingStatus.Failed -> {
+                            snackBarHostState.showSnackbar("Pairing failed")
+                        }
+                        PairingStatus.Idle -> {
+                            //snackBarHostState.showSnackbar("Searching nearest devices...")
+                        }
+                    }
+                }
+            }
 
             Image(
                 painter = painterResource(R.drawable.ic_main_bg),
@@ -307,7 +307,7 @@ fun BluetoothDeviceItem(
         ShowPairingConsentAlert(
             onPair = {
                 bluetoothViewmodel?.connectToDevice(device)
-//                navController?.navigate("bluetooth_connected")
+                bluetoothViewmodel?.updatePairingState(PairingStatus.InProgress(device))
             },
             onCancel = {
                 showDialog.value = false
@@ -428,29 +428,4 @@ fun BluetoothBondingHandler(bluetoothViewModel: BluetoothViewModel?) {
             context.unregisterReceiver(bondingReceiver)
         }
     }
-}
-
-fun startBluetoothServer(bluetoothAdapter: BluetoothAdapter) {
-    Thread {
-        try {
-            val serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord("MyApp", MY_UUID)
-            Log.d("BluetoothServer", "Waiting for connection...")
-            val socket = serverSocket.accept() // Blocks until client connects
-            Log.d("BluetoothServer", "Client connected!")
-
-            val inputStream = socket.inputStream
-            val outputStream = socket.outputStream
-
-            // Example: reading data
-            val buffer = ByteArray(1024)
-            val bytes = inputStream.read(buffer)
-            val message = String(buffer, 0, bytes)
-            Log.d("BluetoothServer", "Received: $message")
-
-            // Example: writing response
-            outputStream.write("Hello from Server".toByteArray())
-        } catch (e: IOException) {
-            Log.e("BluetoothServer", "Error: ${e.message}", e)
-        }
-    }.start()
 }
