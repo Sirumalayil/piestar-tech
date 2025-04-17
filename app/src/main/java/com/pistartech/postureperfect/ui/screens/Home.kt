@@ -34,6 +34,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +62,7 @@ import com.pistartech.postureperfect.R
 import com.pistartech.postureperfect.model.AnalyticsData
 import com.pistartech.postureperfect.model.PieChartSegment
 import com.pistartech.postureperfect.viewmodel.BluetoothViewModel
+import kotlinx.coroutines.delay
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -86,6 +88,7 @@ fun PreviewHomeScreen() {
 @Composable
 fun Home(navController: NavHostController?, bluetoothViewmodel: BluetoothViewModel?) {
     val user = "Siraj"
+    val receivedData = bluetoothViewmodel?.receivedFloatData?.value ?: emptyList()
 
     val cardData = listOf(
         AnalyticsData(title = "Correct sitting posture time", value = "12 Hrs", color = Color(0xFF1FAA59),
@@ -325,15 +328,14 @@ fun Home(navController: NavHostController?, bluetoothViewmodel: BluetoothViewMod
                     ){
                         Column(modifier = Modifier.fillMaxWidth()
                             .padding(start = 8.dp, bottom = 8.dp)) {
-                            val receivedData = bluetoothViewmodel?.receivedFloatData?.value
+//                            val isSafe = runModel(
+//                                context = LocalContext.current,
+//                                inputData = receivedData)
+//                            Log.d("Tflite model", "runModel: $isSafe")
                             LaunchedEffect(receivedData) {
-                                Log.d("Bluetooth", "Data on second screen: $receivedData")
+                                delay(100) // debounce effect
                             }
-                            val isSafe = runModel(
-                                context = LocalContext.current,
-                                inputData = receivedData)
-                            Log.d("Tflite model", "runModel: $isSafe")
-                            HeatmapWithAxes(receivedData!!)
+                            HeatmapWithAxes(receivedData)
                         }
                     }
                 }

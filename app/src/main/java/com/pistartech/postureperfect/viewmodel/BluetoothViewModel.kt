@@ -53,22 +53,43 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
     val connectionState: LiveData<Boolean> get() = _connectionState
 
     private val totalCells = 30 * 30
-    private val _receivedFloatData = mutableStateOf<List<Float>>(List(totalCells) { 0f })
+    private var lastUpdateTime = 0L
+    private val updateInterval = 100L
+    private val _receivedFloatData = mutableStateOf(List(totalCells) { 0f })
     val receivedFloatData: State<List<Float>> = _receivedFloatData
 
 
     fun updateHeatMapData(rawData: String) {
-        val rawValues = rawData.split(",").mapNotNull { it.toFloatOrNull() }
+//        val rawValues = rawData.split(",").mapNotNull { it.toFloatOrNull() }
+//
+//        if (rawValues.isNotEmpty()) {
+//            val minVal = rawValues.minOrNull() ?: 0f
+//            val maxVal = rawValues.maxOrNull() ?: 1f
+//            val range = (maxVal - minVal).takeIf { it != 0f } ?: 1f
+//
+//            val normalized = rawValues.map { ((it - minVal) / range).coerceIn(0f, 1f) }
+//
+//            _receivedFloatData.value = (_receivedFloatData.value + normalized)
+//                .takeLast(totalCells) // Keep only the latest 900 values
+//        }
 
-        if (rawValues.isNotEmpty()) {
-            val minVal = rawValues.minOrNull() ?: 0f
-            val maxVal = rawValues.maxOrNull() ?: 1f
-            val range = (maxVal - minVal).takeIf { it != 0f } ?: 1f
+        viewModelScope.launch(Dispatchers.Default) {
+            val now = System.currentTimeMillis()
+            if (now - lastUpdateTime < updateInterval) return@launch // Skip if updated too recently
+            lastUpdateTime = now
 
-            val normalized = rawValues.map { ((it - minVal) / range).coerceIn(0f, 1f) }
+            val rawValues = rawData.split(",").mapNotNull { it.toFloatOrNull() }
 
-            _receivedFloatData.value = (_receivedFloatData.value + normalized)
-                .takeLast(totalCells) // Keep only the latest 900 values
+            if (rawValues.isNotEmpty()) {
+                val minVal = rawValues.minOrNull() ?: 0f
+                val maxVal = rawValues.maxOrNull() ?: 1f
+                val range = (maxVal - minVal).takeIf { it != 0f } ?: 1f
+
+                val normalized = rawValues.map { ((it - minVal) / range).coerceIn(0f, 1f) }
+
+                _receivedFloatData.value = (_receivedFloatData.value + normalized)
+                    .takeLast(totalCells)
+            }
         }
     }
 
