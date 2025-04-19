@@ -52,7 +52,7 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
     private val _connectionState = MutableLiveData<Boolean>()
     val connectionState: LiveData<Boolean> get() = _connectionState
 
-    private val totalCells = 30 * 30
+    private val totalCells = 32 * 32
     private var lastUpdateTime = 0L
     private val updateInterval = 100L
     private val _receivedFloatData = mutableStateOf(List(totalCells) { 0f })
