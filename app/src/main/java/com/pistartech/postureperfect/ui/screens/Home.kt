@@ -88,7 +88,7 @@ fun PreviewHomeScreen() {
 @Composable
 fun Home(navController: NavHostController?, bluetoothViewmodel: BluetoothViewModel?) {
     val user = "Siraj"
-    val receivedData = bluetoothViewmodel?.receivedFloatData?.value ?: emptyList()
+    val receivedData = bluetoothViewmodel?.receivedFloatData?.value?.chunked(32) ?: emptyList()
 
     val cardData = listOf(
         AnalyticsData(title = "Correct sitting posture time", value = "12 Hrs", color = Color(0xFF1FAA59),
@@ -333,7 +333,8 @@ fun Home(navController: NavHostController?, bluetoothViewmodel: BluetoothViewMod
 //                                inputData = receivedData)
 //                            Log.d("Tflite model", "runModel: $isSafe")
                             LaunchedEffect(receivedData) {
-                                delay(100) // debounce effect
+                                Log.d("receivedData", "receivedData: $receivedData")
+                                delay(300) // debounce effect
                             }
                             HeatmapWithAxes(receivedData)
                         }
@@ -376,14 +377,11 @@ fun SimpleHeatmap(data: List<List<Float>>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun HeatmapWithAxes(heatmapData: List<Float>) {
-    val rows = 30
-    val cols = 30
-//    val data = remember { generateHeatmapData(rows, cols) }
+fun HeatmapWithAxes(heatmapData: List<List<Float>>) {
+    val rows = heatmapData.size
+    val cols = heatmapData.firstOrNull()?.size ?: 0
 
-    val paddedData = remember(heatmapData) {
-        heatmapData.chunked(cols)
-    }
+    val paddedData = remember(heatmapData) { heatmapData }
 
     Row(modifier = Modifier.background(Color.White)) {
         // Y-axis labels

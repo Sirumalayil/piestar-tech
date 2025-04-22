@@ -73,7 +73,7 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
 //                .takeLast(totalCells) // Keep only the latest 900 values
 //        }
 
-        viewModelScope.launch(Dispatchers.Default) {
+        /*viewModelScope.launch(Dispatchers.Default) {
             val now = System.currentTimeMillis()
             if (now - lastUpdateTime < updateInterval) return@launch // Skip if updated too recently
             lastUpdateTime = now
@@ -89,6 +89,27 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
 
                 _receivedFloatData.value = (_receivedFloatData.value + normalized)
                     .takeLast(totalCells)
+            }
+        }*/
+
+        viewModelScope.launch(Dispatchers.Default) {
+            val now = System.currentTimeMillis()
+            if (now - lastUpdateTime < updateInterval) return@launch
+            lastUpdateTime = now
+
+            val rawValues = rawData.split(",").mapNotNull { it.trim().toFloatOrNull() }
+
+            if (rawValues.isNotEmpty()) {
+                val minVal = rawValues.minOrNull() ?: 0f
+                val maxVal = rawValues.maxOrNull() ?: 1f
+                val range = (maxVal - minVal).takeIf { it != 0f } ?: 1f
+
+                val normalized = rawValues.map { ((it - minVal) / range).coerceIn(0f, 1f) }
+
+                // Maintain rolling buffer of exactly 1024 values
+                val currentData = _receivedFloatData.value
+                val updated = (currentData + normalized).takeLast(totalCells)
+                _receivedFloatData.value = updated
             }
         }
     }

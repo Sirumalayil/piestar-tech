@@ -122,7 +122,7 @@ fun BluetoothDevicesListing(
 
             override fun onDataReceived(data: String) {
                 bluetoothViewmodel.updateHeatMapData(data)
-                //Log.e("Bluetooth", "data: $data")
+                Log.e("Bluetooth", "data: $data")
             }
 
             override fun onError(e: Exception) {
