@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -28,6 +29,7 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -92,7 +94,8 @@ fun Analytics(onBackClick: () -> Unit = {}, navController: NavHostController?) {
                         "Analytics",
                         fontFamily = FontFamily(Font(R.font.poppins_bold)),
                         fontSize = 18.sp,
-                        fontWeight = FontWeight(700)
+                        fontWeight = FontWeight(700),
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 },
                 navigationIcon = {
@@ -105,6 +108,10 @@ fun Analytics(onBackClick: () -> Unit = {}, navController: NavHostController?) {
                         )
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onSecondary
+                ),
                 modifier = Modifier.shadow(4.dp)
             )
         }
@@ -117,7 +124,7 @@ fun Analytics(onBackClick: () -> Unit = {}, navController: NavHostController?) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TabRow(selectedTabIndex = selectedTabIndex,
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 indicator = { tabPositions ->
                     TabRowDefaults.Indicator(
                         Modifier
@@ -130,7 +137,7 @@ fun Analytics(onBackClick: () -> Unit = {}, navController: NavHostController?) {
                     Tab(
                         selected = selectedTabIndex == index,
                         onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
+                        text = { Text(title, color = MaterialTheme.colorScheme.primary) }
                     )
                 }
             }
@@ -270,8 +277,8 @@ fun PostureBarChart(data: List<PostureData>) {
                 fontFamily = FontFamily(Font(R.font.poppins_regular)),
                 fontSize = 10.sp,
                 letterSpacing = 3.sp,
-                color = Color(0xFF04293C),
-                fontWeight = FontWeight.Normal
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onTertiary
             )
 
             Spacer(modifier = Modifier.width(10.dp))
@@ -290,7 +297,7 @@ fun PostureBarChart(data: List<PostureData>) {
                 fontFamily = FontFamily(Font(R.font.poppins_regular)),
                 fontSize = 10.sp,
                 letterSpacing = 3.sp,
-                color = Color(0xFF04293C),
+                color = MaterialTheme.colorScheme.onTertiary,
                 fontWeight = FontWeight.Normal
             )
 
@@ -310,7 +317,7 @@ fun PostureBarChart(data: List<PostureData>) {
                 fontFamily = FontFamily(Font(R.font.poppins_regular)),
                 fontSize = 10.sp,
                 letterSpacing = 3.sp,
-                color = Color(0xFF04293C),
+                color = MaterialTheme.colorScheme.onTertiary,
                 fontWeight = FontWeight.Normal
             )
         }

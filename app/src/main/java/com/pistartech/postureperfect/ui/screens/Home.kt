@@ -107,6 +107,7 @@ fun Home(navController: NavHostController?, bluetoothViewmodel: BluetoothViewMod
     Scaffold(
         topBar = {
             TopAppBar(
+                modifier = Modifier.padding(horizontal = 16.dp),
                 title = {},
                 navigationIcon = {
                     Icon(
