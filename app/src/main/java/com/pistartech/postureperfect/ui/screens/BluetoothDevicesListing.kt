@@ -35,6 +35,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -133,11 +134,17 @@ fun BluetoothDevicesListing(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState) }
+        snackbarHost = { SnackbarHost(snackBarHostState) { data ->
+            Snackbar(
+                snackbarData = data,
+                containerColor = Color.Black,
+                contentColor = Color.White
+            )
+        } }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()
             .padding(paddingValues),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             LaunchedEffect(pairingStatus) {
                 pairingStatus?.let {
