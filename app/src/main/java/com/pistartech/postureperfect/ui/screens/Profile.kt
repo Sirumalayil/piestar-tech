@@ -19,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -60,7 +61,7 @@ fun ProfileScreen(onBackClick: () -> Unit = {}, navController: NavHostController
             TopAppBar(
                 title = { Text(text = "Profile",
                     style = TextStyle(
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily(Font(R.font.poppins_bold))
@@ -72,13 +73,13 @@ fun ProfileScreen(onBackClick: () -> Unit = {}, navController: NavHostController
                             painter = painterResource(
                                 id = R.drawable.ic_back),
                             contentDescription = "back icon",
-                            tint = Color.Black
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black
+                    containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onSecondary
                 ),
             )
         },
@@ -147,7 +148,7 @@ fun ProfileItem(iconRes: Int, title: String, onClick: () -> Unit,
         Spacer(modifier = Modifier.width(16.dp))
         Text(text = title,
             fontSize = 16.sp,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onPrimary,
             fontFamily = FontFamily(Font(R.font.poppins_regular)),
             modifier = Modifier.weight(500f))
         if (showSwitch) {
@@ -163,7 +164,10 @@ fun ProfileItem(iconRes: Int, title: String, onClick: () -> Unit,
                 }
             )
         } else
-            Icon(painter = painterResource(id = R.drawable.ic_right_arrow), contentDescription = "Forward", tint = Color.Black)
+            Icon(painter = painterResource(
+                id = R.drawable.ic_right_arrow),
+                contentDescription = "Forward",
+                tint = MaterialTheme.colorScheme.surfaceTint)
     }
 }
 

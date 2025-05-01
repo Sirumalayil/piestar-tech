@@ -33,6 +33,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -181,13 +182,14 @@ fun BluetoothDevicesListing(
                     style = TextStyle(
                         fontFamily = FontFamily(Font(R.font.poppins_bold)),
                         fontSize = 20.sp,
-                        color = Color.Black,
+                        color = MaterialTheme.colorScheme.onSecondary,
                         fontWeight = FontWeight.Bold
                     )
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text("select a chair to connect")
+                Text("select a chair to connect",
+                    color = MaterialTheme.colorScheme.onSecondary)
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -199,7 +201,8 @@ fun BluetoothDevicesListing(
                         }
                     }
                 } else {
-                    Text("No devices found. Please scan.")
+                    Text("No devices found. Please scan.",
+                        color = MaterialTheme.colorScheme.onSecondary)
                 }
 
             }
@@ -270,7 +273,7 @@ fun BluetoothDeviceItem(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_chair),
                         contentDescription = null,
-                        tint = Color.Black,
+                        tint = MaterialTheme.colorScheme.onSecondary,
                         modifier = Modifier.size(36.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -331,6 +334,7 @@ fun ShowPairingConsentAlert(
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 text = "Pair Device",
+                color = MaterialTheme.colorScheme.onSecondary,
                 fontSize = 18.sp,
                 textAlign = TextAlign.Center,
                 fontFamily = FontFamily(Font(R.font.poppins_bold))
@@ -338,6 +342,7 @@ fun ShowPairingConsentAlert(
         },
         text = {
             Text(
+                color = MaterialTheme.colorScheme.onSecondary,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
                 fontFamily = FontFamily(Font(R.font.poppins_regular)),

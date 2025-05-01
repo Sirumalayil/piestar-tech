@@ -332,10 +332,10 @@ fun Home(navController: NavHostController?, bluetoothViewmodel: BluetoothViewMod
 //                                context = LocalContext.current,
 //                                inputData = receivedData)
 //                            Log.d("Tflite model", "runModel: $isSafe")
-                            LaunchedEffect(receivedData) {
-                                Log.d("receivedData", "receivedData: $receivedData")
-                                delay(300) // debounce effect
-                            }
+//                            LaunchedEffect(receivedData) {
+//                                Log.d("receivedData", "receivedData: $receivedData")
+//                                delay(300) // debounce effect
+//                            }
                             HeatmapWithAxes(receivedData)
                         }
                     }

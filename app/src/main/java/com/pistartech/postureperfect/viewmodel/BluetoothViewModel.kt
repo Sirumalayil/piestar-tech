@@ -54,7 +54,7 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
 
     private val totalCells = 32 * 32
     private var lastUpdateTime = 0L
-    private val updateInterval = 100L
+    private val updateInterval = 500L
     private val _receivedFloatData = mutableStateOf(List(totalCells) { 0f })
     val receivedFloatData: State<List<Float>> = _receivedFloatData
 
@@ -153,7 +153,6 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
         }
     }
 
-    @SuppressLint("MissingPermission")
     fun startDiscovery() {
         if (bluetoothAdapter?.isDiscovering == true) {
             bluetoothAdapter.cancelDiscovery()
@@ -188,7 +187,6 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
         stopDiscovery()
     }
 
-    @SuppressLint("MissingPermission")
     fun toggleBluetooth(enabled: Boolean,context:Context) {
         if (!hasPermissions(context)) return
         bluetoothAdapter?.let { bltAdapter ->
