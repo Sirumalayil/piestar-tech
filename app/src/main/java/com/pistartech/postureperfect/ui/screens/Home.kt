@@ -65,12 +65,14 @@ import com.pistartech.postureperfect.viewmodel.BluetoothViewModel
 import kotlinx.coroutines.delay
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.FileInputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.collections.*
 
 /**
  * Created by Siru malayil on 10-04-2025.
@@ -329,14 +331,14 @@ fun Home(navController: NavHostController?, bluetoothViewmodel: BluetoothViewMod
                     ){
                         Column(modifier = Modifier.fillMaxWidth()
                             .padding(start = 8.dp, bottom = 8.dp)) {
-//                            val isSafe = runModel(
-//                                context = LocalContext.current,
-//                                inputData = receivedData)
-//                            Log.d("Tflite model", "runModel: $isSafe")
-//                            LaunchedEffect(receivedData) {
-//                                Log.d("receivedData", "receivedData: $receivedData")
-//                                delay(300) // debounce effect
-//                            }
+                            val isSafe = runModel(
+                                context = LocalContext.current,
+                                inputData = receivedData)
+                            Log.d("Tflite model", "runModel: $isSafe")
+                            LaunchedEffect(receivedData) {
+                                Log.d("receivedData", "receivedData: $receivedData")
+                                delay(300) // debounce effect
+                            }
                             HeatmapWithAxes(receivedData)
                         }
                     }
@@ -594,23 +596,51 @@ fun loadModelFile(context: Context, fileName: String): MappedByteBuffer {
     return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
 }
 
-fun runModel(context: Context, inputData: List<Float>?): Boolean {
+fun runModel(context: Context, inputData: List<List<Float>>?): Boolean {
     val model = Interpreter(loadModelFile(context, "model.tflite"))
 
-    // Convert List<Float> to FloatArray
-    val inputArray = inputData?.toFloatArray()
+    // Handle null or empty input
+    if (inputData.isNullOrEmpty() || inputData[0].isEmpty()) return false
 
-    // Prepare input buffer
-    val inputBuffer = TensorBuffer.createFixedSize(intArrayOf(1, inputArray?.size ?: 0), DataType.FLOAT32)
-    inputBuffer.loadArray(inputArray)
+    val rows = inputData.size
+    val cols = inputData[0].size
 
-    // Prepare output buffer (adjust shape to your model's output)
-    val outputBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 1), DataType.FLOAT32)
+    // Flatten input data
+    val flatInputArray = FloatArray(rows * cols)
+    for (i in 0 until rows) {
+        for (j in 0 until cols) {
+            flatInputArray[i * cols + j] = inputData[i][j]
+        }
+    }
 
-    model.run(inputBuffer.buffer, outputBuffer.buffer.rewind())
+    // Allocate ByteBuffer for input (float = 4 bytes)
+    val inputBuffer = ByteBuffer.allocateDirect(4 * flatInputArray.size)
+        .order(ByteOrder.nativeOrder())
 
-    val output = outputBuffer.floatArray[0]
+    for (value in flatInputArray) {
+        inputBuffer.putFloat(value)
+    }
 
-    // Return true or false based on some logic — for example:
+    // Rewind buffer before feeding it to the model
+    inputBuffer.rewind()
+
+    val outputTensor = model.getOutputTensor(0)
+    val outputShape = outputTensor.shape() // e.g., [1, 2]
+    val numOutputFloats = outputShape.reduce { acc, dim -> acc * dim }
+
+    // Allocate ByteBuffer for output (float = 4 bytes)
+    val outputBuffer = ByteBuffer.allocateDirect(4 * numOutputFloats) // assuming output shape is [1,1]
+        .order(ByteOrder.nativeOrder())
+
+    outputBuffer.rewind()
+
+    // Run inference
+    model.run(inputBuffer, outputBuffer)
+
+    // Rewind before reading
+    outputBuffer.rewind()
+
+    val output = outputBuffer.float
+
     return output > 0.5f
 }

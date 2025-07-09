@@ -102,7 +102,8 @@ dependencies {
 
     implementation(libs.coil.compose)
 
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")  // Use the latest version
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
+//    implementation("org.tensorflow:tensorflow-lite:2.14.0")  // Use the latest version
+    implementation ("com.google.ai.edge.litert:litert:1.2.0")
+//    implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
 
 }
