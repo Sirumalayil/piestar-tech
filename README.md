@@ -53,7 +53,7 @@ Arduino Nano 33 BLE with a BLE-enabled sketch uploaded
 
 Clone this repo:
 
-git clone https://github.com/Sirumalayil/piestar-tech)
+git clone https://github.com/Sirumalayil/piestar-tech.git
 
 
 Open in Android Studio.
