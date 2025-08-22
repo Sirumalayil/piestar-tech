@@ -53,7 +53,7 @@ Arduino Nano 33 BLE with a BLE-enabled sketch uploaded
 
 Clone this repo:
 
-git clone https://github.com/your-username/IoT-BLE-App.git
+git clone https://github.com/Sirumalayil/piestar-tech)
 
 
 Open in Android Studio.
@@ -61,10 +61,6 @@ Open in Android Studio.
 Sync Gradle & run on a real device (emulators do not support BLE).
 
 Turn on Bluetooth & connect to your Arduino Nano 33 BLE.
-
-📷 Screenshots (optional)
-
-(Add screenshots or GIFs of scanning and connecting screens if possible)
 
 🤝 Contributing
 
