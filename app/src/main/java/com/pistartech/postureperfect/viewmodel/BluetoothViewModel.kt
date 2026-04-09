@@ -105,17 +105,32 @@ class BluetoothViewModel(application: Application): BaseViewModel(application) {
                 BluetoothDevice.ACTION_FOUND -> {
                     val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                     device?.let {
-                        if (foundDevices.add(it)) {
+                        val alreadyAdded = foundDevices.any {  d ->
+                            it.address == d.address
+                        }
+                        if (!alreadyAdded) {
+                            foundDevices.add(it)
                             _nearbyDevices.value = foundDevices.toList()
                         }
                     }
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                     foundDevices.clear()
-                    _nearbyDevices.value = emptyList()
+
+                    bluetoothAdapter?.bondedDevices?.forEach { bondedDevices ->
+                        if (foundDevices.none { it.address == bondedDevices.address}) {
+                            foundDevices.add(bondedDevices)
+                        }
+                    }
+                    _nearbyDevices.value = foundDevices.toList()
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     // Discovery finished
+                    bluetoothAdapter?.let {
+                        if (!it.isDiscovering) {
+                            it.startDiscovery()
+                        }
+                    }
                 }
                 BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
                     val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
