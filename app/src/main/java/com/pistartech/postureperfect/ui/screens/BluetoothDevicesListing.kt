@@ -107,9 +107,10 @@ fun BluetoothDevicesListing(
     val pairingStatus = bluetoothViewmodel?.pairingState?.collectAsState()?.value
     val nearbyDevices = bluetoothViewmodel?.nearbyDevices?.collectAsState()?.value ?: emptyList()
 //    val nearbyDevices = bluetoothViewmodel?.bleDevices?.collectAsState()?.value ?: emptyList()
-    LaunchedEffect(Unit) { bluetoothViewmodel?.startDiscovery() }
+
 
     LaunchedEffect(Unit) {
+        bluetoothViewmodel?.startDiscovery()
         bluetoothViewmodel?.setCallback(object : BluetoothConnectionCallback {
             override fun onConnected() {
                 Log.d("Bluetooth", "Connected to device")
